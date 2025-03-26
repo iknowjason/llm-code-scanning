@@ -1,0 +1,263 @@
+name: LLM Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Monday at 8:00 AM UTC
+    - cron: '0 8 * * 1'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai anthropic
+      
+      - name: Find changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+        with:
+          files: |
+            **/*.py
+            **/*.js
+            **/*.ts
+            **/*.java
+            **/*.c
+            **/*.cpp
+            **/*.go
+            **/*.php
+            **/*.rb
+      
+      - name: Install security scanner
+        run: |
+          # Copy the scanner script from the repo
+          cp ${{ github.workspace }}/.github/scripts/llm_security_scanner.py .
+          chmod +x llm_security_scanner.py
+      
+      # Only run the scan on changed files in pull requests
+      - name: LLM Security Scan (PR)
+        if: github.event_name == 'pull_request' && steps.changed-files.outputs.all_changed_files != ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Uncomment if using Anthropic's Claude
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          mkdir -p scan-results
+          echo "Scanning changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
+          
+          # Scan each changed file
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "Scanning file: $file"
+            python llm_security_scanner.py --file "$file" --output-format markdown --output-file "scan-results/$(basename $file).md"
+          done
+          
+          # Combine results
+          echo "# LLM Security Scan Results" > scan-results/combined-results.md
+          echo "## Changed Files" >> scan-results/combined-results.md
+          echo "" >> scan-results/combined-results.md
+          cat scan-results/*.md >> scan-results/combined-results.md
+      
+      # Run full scan on schedule or push to main
+      - name: LLM Security Scan (Full)
+        if: github.event_name == 'push' || github.event_name == 'schedule'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Uncomment if using Anthropic's Claude
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          mkdir -p scan-results
+          echo "Running full security scan"
+          
+          # Scan the entire repository
+          python llm_security_scanner.py --directory "${{ github.workspace }}" --output-format markdown --output-file "scan-results/full-scan-results.md"
+      
+      # Parse the results and create GitHub issues for vulnerabilities
+      - name: Create GitHub Issues for Vulnerabilities
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Function to parse markdown content for vulnerabilities
+            function parseVulnerabilities(content) {
+              const vulnerabilities = [];
+              const lines = content.split('\n');
+              
+              let currentVuln = null;
+              let inFixExample = false;
+              let fixExampleContent = '';
+              
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // Start of a new vulnerability
+                if (line.startsWith('#### ')) {
+                  if (currentVuln) {
+                    if (inFixExample) {
+                      currentVuln.fixExample = fixExampleContent.trim();
+                      inFixExample = false;
+                      fixExampleContent = '';
+                    }
+                    vulnerabilities.push(currentVuln);
+                  }
+                  
+                  currentVuln = {
+                    type: line.replace('#### ', '').trim(),
+                    file: '',
+                    severity: '',
+                    lineNumbers: '',
+                    description: '',
+                    impact: '',
+                    recommendation: '',
+                    fixExample: ''
+                  };
+                }
+                // Get file name
+                else if (line.startsWith('### ')) {
+                  if (currentVuln) {
+                    currentVuln.file = line.replace('### ', '').trim();
+                  }
+                }
+                // Get vulnerability details
+                else if (line.startsWith('- **Severity**:')) {
+                  if (currentVuln) {
+                    currentVuln.severity = line.replace('- **Severity**: ', '').trim();
+                  }
+                }
+                else if (line.startsWith('- **Line Numbers**:')) {
+                  if (currentVuln) {
+                    currentVuln.lineNumbers = line.replace('- **Line Numbers**: ', '').trim();
+                  }
+                }
+                else if (line.startsWith('- **Description**:')) {
+                  if (currentVuln) {
+                    currentVuln.description = line.replace('- **Description**: ', '').trim();
+                  }
+                }
+                else if (line.startsWith('- **Impact**:')) {
+                  if (currentVuln) {
+                    currentVuln.impact = line.replace('- **Impact**: ', '').trim();
+                  }
+                }
+                else if (line.startsWith('- **Recommendation**:')) {
+                  if (currentVuln) {
+                    currentVuln.recommendation = line.replace('- **Recommendation**: ', '').trim();
+                  }
+                }
+                // Handle fix example
+                else if (line.startsWith('**Fix Example**:')) {
+                  inFixExample = true;
+                }
+                else if (inFixExample && line.startsWith('```')) {
+                  // Skip the code fence lines
+                  continue;
+                }
+                else if (inFixExample) {
+                  fixExampleContent += line + '\n';
+                }
+              }
+              
+              // Add the last vulnerability if there is one
+              if (currentVuln) {
+                if (inFixExample) {
+                  currentVuln.fixExample = fixExampleContent.trim();
+                }
+                vulnerabilities.push(currentVuln);
+              }
+              
+              return vulnerabilities;
+            }
+            
+            // Read scan results
+            const resultsDir = path.join(process.env.GITHUB_WORKSPACE, 'scan-results');
+            const files = fs.readdirSync(resultsDir);
+            
+            let allVulnerabilities = [];
+            
+            for (const file of files) {
+              if (file.endsWith('.md')) {
+                const content = fs.readFileSync(path.join(resultsDir, file), 'utf8');
+                const vulnerabilities = parseVulnerabilities(content);
+                allVulnerabilities = allVulnerabilities.concat(vulnerabilities);
+              }
+            }
+            
+            console.log(`Found ${allVulnerabilities.length} vulnerabilities`);
+            
+            // Create GitHub issues for each vulnerability
+            for (const vuln of allVulnerabilities) {
+              // Only create issues for medium, high, and critical vulnerabilities
+              if (!['Medium', 'High', 'Critical'].includes(vuln.severity)) {
+                console.log(`Skipping ${vuln.severity} severity vulnerability in ${vuln.file}`);
+                continue;
+              }
+              
+              const issueTitle = `[${vuln.severity}] ${vuln.type} in ${vuln.file}`;
+              
+              const issueBody = `
+            ## Security Vulnerability: ${vuln.type}
+            
+            **File:** ${vuln.file}
+            **Severity:** ${vuln.severity}
+            **Line Numbers:** ${vuln.lineNumbers}
+            
+            ### Description
+            ${vuln.description}
+            
+            ### Impact
+            ${vuln.impact}
+            
+            ### Recommendation
+            ${vuln.recommendation}
+            
+            ${vuln.fixExample ? `### Fix Example\n\`\`\`\n${vuln.fixExample}\n\`\`\`` : ''}
+            
+            ---
+            *This issue was automatically created by the LLM Security Scanner.*
+            `;
+              
+              // Create GitHub issue
+              try {
+                const issue = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
+                  labels: ['security', `severity:${vuln.severity.toLowerCase()}`]
+                });
+                
+                console.log(`Created issue #${issue.data.number}: ${issueTitle}`);
+              } catch (error) {
+                console.error(`Error creating issue for ${vuln.file}: ${error.message}`);
+              }
+            }
+            
+      - name: Upload Scan Results
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-results
+          path: scan-results/
