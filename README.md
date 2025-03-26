@@ -138,6 +138,11 @@ You can customize the behavior of the scanner by modifying:
 
 This project was inspired by research showing that LLMs can effectively identify code vulnerabilities and provide useful remediation guidance.
 
+- Steve Sims for research idea
+- Melanie Hart Buehler for her research:
+
+https://towardsdatascience.com/detecting-insecure-code-with-llms-8b8ad923dd98/
+
 ## Python PoC
 The ```script``` directory contains the evolving python PoC for security scanning.
 
