@@ -15,6 +15,16 @@ This project implements a security scanning solution that leverages Large Langua
 - Can be run locally or in CI/CD pipelines
 - Creates GitHub issues for detected vulnerabilities
 - Supports both OpenAI and Anthropic LLMs
+- Can scan individual files or entire directories
+- Generates reports in JSON or Markdown format
+
+**Gibhut Actions:**
+
+- Runs automatically on pushes, pull requests, and on a weekly schedule
+- Scans only changed files in pull requests for efficiency
+- Performs a full scan in scheduled runs or pushes to main
+- Creates GitHub issues for detected vulnerabilities
+- Uploads scan results as workflow artifacts
 
 ## Prerequisites
 
@@ -139,27 +149,7 @@ You can customize the behavior of the scanner by modifying:
 This project was inspired by research showing that LLMs can effectively identify code vulnerabilities and provide useful remediation guidance.
 
 - Steve Sims for research idea
-- Melanie Hart Buehler for her research:
-
-https://towardsdatascience.com/detecting-insecure-code-with-llms-8b8ad923dd98/
-
-## Python PoC
-The ```script``` directory contains the evolving python PoC for security scanning.
-
-- Supports both OpenAI and Anthropic APIs
-- Can scan individual files or entire directories
-- Detects vulnerabilities in multiple programming languages
-- Provides detailed information about each vulnerability
-- Generates reports in JSON or Markdown format
-
-## Github Actions Workflow Automation
-The ```workflows``` directory contains the Github Actions workflow to integrate into automation.
-
-- Runs automatically on pushes, pull requests, and on a weekly schedule
-- Scans only changed files in pull requests for efficiency
-- Performs a full scan in scheduled runs or pushes to main
-- Creates GitHub issues for detected vulnerabilities
-- Uploads scan results as workflow artifacts
+- Melanie Hart Buehler for her [research into using LLMs to detect insecure code](https://towardsdatascience.com/detecting-insecure-code-with-llms-8b8ad923dd98/):
 
 ## Vulnerable Code Examples
 The ```vulnerable-code``` directory contains example vulnerable code you can scan to test findings.  For now it is a vulnerable python app but I will add more languages as soon as possible.
