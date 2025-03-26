@@ -4,7 +4,7 @@ This project implements a security scanning solution that leverages Large Langua
 
 **Note:** A lot of this research was done with trial and error using LLMs and different prompting approaches.
 
-## Features
+## Overall Features
 
 - Uses LLMs to detect security vulnerabilities in code
 - Supports multiple programming languages (Python, JavaScript, TypeScript, Java, C/C++, Go, PHP, Ruby)
@@ -20,7 +20,7 @@ This project implements a security scanning solution that leverages Large Langua
 - Can scan individual files or entire directories
 - Generates reports in JSON or Markdown format
 
-**Gibhut Actions:**
+## Github Actions Features
 
 - Runs automatically on pushes, pull requests, and on a weekly schedule
 - Scans only changed files in pull requests for efficiency
