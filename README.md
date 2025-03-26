@@ -13,6 +13,12 @@ The ```script``` directory contains the evolving python PoC for security scannin
 ## Github Actions Workflow Automation
 The ```workflows``` directory contains the Github Actions workflow to integrate into automation.
 
+- Runs automatically on pushes, pull requests, and on a weekly schedule
+- Scans only changed files in pull requests for efficiency
+- Performs a full scan in scheduled runs or pushes to main
+- Creates GitHub issues for detected vulnerabilities
+- Uploads scan results as workflow artifacts
+
 ## Vulnerable Code Examples
 The ```vulnerable-code``` directory contains example vulnerable code you can scan to test findings.  For now it is a vulnerable python app but I will add more languages as soon as possible.
 
