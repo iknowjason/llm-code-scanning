@@ -2,6 +2,8 @@
 
 This project implements a security scanning solution that leverages Large Language Models (LLMs) like GPT-4 or Claude to detect vulnerabilities in your codebase. It can be run locally as a CLI tool or integrated into your CI/CD pipeline using GitHub Actions.
 
+**Note:** A lot of this research was done with trial and error using LLMs and different prompting approaches.
+
 ## Features
 
 - Uses LLMs to detect security vulnerabilities in code
