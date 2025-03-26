@@ -47,7 +47,7 @@ This project implements a security scanning solution that leverages Large Langua
 
 ## Local Usage
 
-The scanner can be used to check a single file or an entire directory.  The script is located in the ```script``` directory.
+The script is located in the ```script``` directory.  The scanner can be used to check a single file or an entire directory:
 
 ```bash
 # Scan a single file
