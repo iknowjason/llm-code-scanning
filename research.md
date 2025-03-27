@@ -25,7 +25,8 @@ github.com
 . For instance, GPT-3 had to analyze files individually due to context limits, meaning cross-file vulnerabilities requiring whole-repository reasoning could be missed​
 github.com
 . Newer models like GPT-4 alleviate some of these issues with more tokens and better accuracy. In summary, GPT-4 Turbo is the recommended model for a language-agnostic scanner given its superior code comprehension and vulnerability detection performance, whereas GPT-3.5 may be used for preliminary scans or budget-conscious scenarios (acknowledging a drop in recall/precision).
-Prompt Engineering for Reliable Vulnerability Detection
+
+## Prompt Engineering for Reliable Vulnerability Detection
 
 Crafting effective prompts is essential to guide the LLM to produce accurate and comprehensive vulnerability reports. Unlike a human code review, the AI needs clear instruction on what to look for and how to format its findings. Best practices for prompt engineering include:
 
