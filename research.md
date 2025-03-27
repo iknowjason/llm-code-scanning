@@ -1,6 +1,6 @@
 # Developing a Language-Agnostic LLM-Powered Code Vulnerability Scanner
 
-**Important Note:** This 'research' was generated with Chat GPT Deep Research to help me automate research and ideas.
+**Important Note:** This ```research``` was generated with Chat GPT Deep Research to help me automate research and ideas.
 
 ## Introduction
 
