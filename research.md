@@ -7,7 +7,8 @@
 Large Language Models (LLMs) like OpenAI’s GPT series have shown remarkable ability to understand and generate code, opening new possibilities for automated security code reviews. In traditional static analysis, tools rely on predefined rules and often struggle with high false positives or language-specific limitations. By contrast, an LLM-based vulnerability scanner can leverage the model’s knowledge of common weakness patterns across languages. For example, an experiment using GPT-3 to scan a vulnerable codebase found 213 potential issues, compared to 99 found by a top commercial scanner​
 github.com
 . This report explores best practices to build a language-agnostic code vulnerability scanner using an LLM (such as GPT-4 Turbo) that can: traverse a repository’s directories, identify the programming language of each source file, analyze code for security weaknesses (e.g. injections, insecure deserialization, use of vulnerable APIs), and report potential vulnerabilities with file names and line numbers. We also discuss effective model choices, prompt engineering techniques for reliable detection, multi-language support, examples of LLM-based scanning in practice, and how to integrate the scanner into a GitHub Actions CI/CD workflow for automated issue reporting.
-Selecting an OpenAI Model for Vulnerability Scanning
+
+## Selecting an OpenAI Model for Vulnerability Scanning
 
 Choosing the right LLM is critical for effective code vulnerability detection. GPT-4 (and its variants) is currently the most capable model in OpenAI’s lineup for complex reasoning and code understanding. Studies have shown that GPT-4 significantly outperforms GPT-3.5 in identifying security flaws​
 mdpi.com
