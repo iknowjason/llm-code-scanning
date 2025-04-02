@@ -16,7 +16,7 @@ This project implements a security scanning solution that leverages Large Langua
   - Recommended fixes with code examples
 - Can be run locally or in CI/CD pipelines
 - Creates GitHub issues for detected vulnerabilities
-- Supports both OpenAI and Anthropic LLMs
+- Supports both OpenAI and Anthropic models
 - Can scan individual files or entire directories
 - Generates reports in JSON or Markdown format
 
